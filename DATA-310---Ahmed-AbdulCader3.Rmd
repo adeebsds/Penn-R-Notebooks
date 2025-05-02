@@ -1,0 +1,108 @@
+---
+title: "Data 310 - 3"
+author: "Ahmed Adeeb AbdulCader Mohammed Shaheed"
+date: "2023-01-31"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(scales)
+library(tigerstats)
+library(readxl)
+```
+
+## R Markdown
+
+#1
+
+A sampling distribution is a probability distribution of a statistic that is derived from a bigger sample size of individuals chosen at random from a given population. The sampling distribution of a particular population is the distribution of frequencies of a variety of potential outcomes for a population statistic. It is essentially the frequency distribution of the frequency distribution of any given statistic.
+
+An example would be trying to find the average weight of a 3 year old in each state in the US. You randomly select 50 children from each state and calculate the mean weight for each state. Then you can calculate the mean of the sampling distribution by finding the mean of all the average weights of each sample group.
+
+#2
+a
+```{r include=TRUE}
+pnorm(78, mean = 76, sd = (sqrt(35))/(sqrt(50)), lower.tail=TRUE) - pnorm(73, mean = 76, sd = (sqrt(35))/(sqrt(50)), lower.tail=TRUE)
+```
+
+b
+```{r include=TRUE}
+
+qnorm((1-.995), 76, sqrt(35)/sqrt(75))
+```
+```{r include=TRUE}
+qnorm(0.995, 76, sqrt(35)/sqrt(75))
+
+```
+
+
+c
+```{r include=TRUE}
+'since sd = sqrt(var)/sqrt(n)'
+
+n <- (sqrt(35)/(0.5/qnorm(.975)))^2
+```
+d
+#Hello Boss,
+#I believe that we should invest into a larger sample size because the Central Limit Theorem estimates we would have a smaller amount of error if we do. If hypothetically, our expected value is 76, our sample size would need to be 538 for our sample to be between 75.5 and 76.5 with a 95% probability.
+
+#3
+
+a
+```{r include=TRUE}
+library(readxl)
+ohio<- read_excel("Ohio2016.xlsx")
+
+
+names(ohio)
+ohio$trumpVotes <- ohio$Trump/ohio$Ballots
+```
+
+
+```{r include=TRUE}
+
+ggplot(data=ohio)+
+  geom_histogram(aes(x=trumpVotes))
+```
+#It doesn't look like a normal distribution
+
+b
+```{r include=TRUE}
+mean(ohio$trumpVotes)
+var(ohio$trumpVotes)
+
+```
+
+c
+```{r include=TRUE}
+
+se <- sqrt(var(ohio$trumpVotes))/sqrt(40)
+
+qnorm(.995, mean=mean(ohio$trumpVotes), sd=se)
+qnorm(.005, mean=mean(ohio$trumpVotes), sd=se)
+```
+
+d
+```{r include=TRUE}
+se <- sqrt(var(ohio$trumpVotes))/sqrt(80)
+
+qnorm(.995, mean=mean(ohio$trumpVotes), sd=se)
+qnorm(.005, mean=mean(ohio$trumpVotes), sd=se)
+
+se <- sqrt(var(ohio$trumpVotes))/sqrt(120)
+
+qnorm(.995, mean=mean(ohio$trumpVotes), sd=se)
+qnorm(.005, mean=mean(ohio$trumpVotes), sd=se)
+```
+
+e
+```{r include=TRUE}
+
+precincts<-length(ohio$Precinct)
+
+answer<-ohio%>%
+  group_by(Region)%>%
+  summarize(perc=n()/precincts)
+```

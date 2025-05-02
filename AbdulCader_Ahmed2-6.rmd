@@ -1,0 +1,203 @@
+---
+title: "HW WEEK 6"
+author: "Ahmed Adeeb AbdulCader Mohammed Shaheed"
+date: "2022-12-16"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(rio)
+library(weights)
+```
+
+## R Markdown
+
+#Question 1a
+```{r include=TRUE}
+set.seed(1)
+sort(sample(365, 500, replace = TRUE))
+```
+```{r include=TRUE}
+
+'%notin%'<-Negate('%in%')
+
+as.integer(1 %notin% (sample(365, 500, replace = TRUE)))
+```
+#Question 1b
+```{r include=TRUE}
+
+jan1bday <- vector("logical", length = 1000)
+set.seed(1)
+for(i in 1:1000){
+jan1bday[[i]] <- as.integer(1 %notin% (sample(365, 500, replace = TRUE))) 
+}
+
+jan1bday
+```
+#Question 1c
+```{r include=TRUE}
+
+mean(jan1bday) * 100
+```
+#Question 1d
+```{r include=TRUE}
+
+bday.function <- function(x){
+  jan1bday <- vector("logical", length = 1000)
+  set.seed(1)
+  for(i in 1:1000){
+jan1bday[[i]] <- as.integer(1 %notin% (sample(365, x, replace = TRUE))) 
+}
+  probability <- mean(jan1bday)
+  return(probability)
+}
+
+bday.function(750) 
+```
+#Question 1e
+```{r include=TRUE}
+
+group.probabilities <- vector(length = 1000)
+
+group.size <- 500:1500
+
+set.seed(1)
+for( i in seq_along(group.size)){
+  group.probabilities[i] <- bday.function((group.size[i]))
+}
+
+plot(group.size, group.probabilities, 
+     xlab = "Size of Group", ylab = "Likelihood of No Jan 1 Birthdays")
+```
+#Question 2a
+```{r include=TRUE}
+
+july19poll <- rio::import("july-2019-sm-poll.sav")
+mean(july19poll$weight)
+```
+#Question 2b
+```{r include=TRUE}
+
+plot(july19poll$weight)
+```
+#Question 2c
+```{r include=TRUE}
+
+july19poll$race <- factor(july19poll$race,
+                        labels = names(attr(july19poll$race, "labels")))
+
+july19poll$gender[july19poll$gender == 1] <- "Male"
+july19poll$gender[july19poll$gender == 2] <- "Female"
+july19poll$gender[july19poll$gender == 3] <- "NA"
+
+which.max(july19poll$weight)
+```
+```{r include=TRUE}
+
+july19poll[7792,]
+```
+```{r include=TRUE}
+
+nrow(july19poll %>%
+  filter(july19poll$gender == "Female" & july19poll$race == "Hispanic")) /
+  nrow(july19poll) * 100
+```
+#Question 2d
+```{r include=TRUE}
+
+mean(july19poll$age)
+```
+```{r include=TRUE}
+
+weighted.mean(july19poll$age, w = july19poll$weight, na.rm = TRUE)
+```
+#Question 2e
+```{r include=TRUE}
+
+unweighted <- wpct(july19poll$race) * 100
+unweighted
+```
+```{r include=TRUE}
+
+weighted <- wpct(july19poll$race, weight = july19poll$weight) * 100
+weighted
+```
+```{r include=TRUE}
+
+weighted-unweighted
+```
+#Question 2f
+```{r include=TRUE}
+
+july19poll$taxes_improve_infrastructure <- 
+  factor(july19poll$taxes_improve_infrastructure,
+         labels = names(attr(july19poll$taxes_improve_infrastructure, "labels")))
+
+wpct(july19poll$taxes_improve_infrastructure[
+  july19poll$taxes_improve_infrastructure != "No answer"], 
+     weight = july19poll$weight) * 100
+```
+```{r include=TRUE}
+
+july19poll$party <- factor(july19poll$party,
+                        labels = names(attr(july19poll$party, "labels")))
+ 
+with(july19poll[july19poll$taxes_improve_infrastructure != "No answer" & 
+                  july19poll$party == "Republican",],
+     wpct(taxes_improve_infrastructure, weight)) * 100
+```
+```{r include=TRUE}
+
+with(july19poll[july19poll$taxes_improve_infrastructure != "No answer" & 
+                  july19poll$party == "Democrat",],
+     wpct(taxes_improve_infrastructure, weight)) * 100
+```
+#Question 2g
+```{r include=TRUE}
+
+july19poll$trust_fed_gov <- factor(july19poll$trust_fed_gov,
+                        labels = names(attr(july19poll$trust_fed_gov, "labels")))
+
+july19poll$trust_state_gov <- factor(july19poll$trust_state_gov,
+                        labels = names(attr(july19poll$trust_state_gov, "labels")))
+
+fed.trust <- with(july19poll[july19poll$trust_fed_gov != "No answer",],
+     wpct(trust_fed_gov, weight)) * 100
+fed.trust
+```
+```{r include=TRUE}
+
+state.trust <- with(july19poll[july19poll$trust_state_gov != "No answer",],
+     wpct(trust_state_gov, weight)) * 100
+state.trust
+```
+```{r include=TRUE}
+
+state.trust - fed.trust
+```
+```{r include=TRUE}
+
+with(july19poll[july19poll$trust_fed_gov != "No answer" & 
+                  july19poll$party == "Republican",],
+     wpct(trust_fed_gov, weight)) * 100
+```
+```{r include=TRUE}
+
+with(july19poll[july19poll$trust_fed_gov != "No answer" & 
+                  july19poll$party == "Democrat",],
+     wpct(trust_fed_gov, weight)) * 100
+```
+```{r include=TRUE}
+
+with(july19poll[july19poll$trust_fed_gov != "No answer" & 
+                  july19poll$race == "White",],
+     wpct(trust_fed_gov, weight)) * 100
+```
+```{r include=TRUE}
+
+with(july19poll[july19poll$trust_fed_gov != "No answer" & 
+                  july19poll$race == "Black",],
+     wpct(trust_fed_gov, weight)) * 100
+```

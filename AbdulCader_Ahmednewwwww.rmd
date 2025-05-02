@@ -1,0 +1,151 @@
+---
+title: "AbdulCader_Mohammed_Shaheed"
+author: "Ahmed Adeeb AbdulCader Mohammed Shaheed"
+date: "2022-09-26"
+output:
+  word_document: default
+  html_document: default
+  pdf_document: default
+---
+
+
+```{r setup, include=FALSE}
+library(tidyverse) 
+library(dslabs)
+knitr::opts_chunk$set(echo = TRUE)
+```
+## R Markdown
+
+#-------------------------------------------------
+# Topic 6 HW
+# Name: Ahmed Adeeb AbdulCader Mohammed Shaheed
+#-------------------------------------------------
+
+#-------------------------------------------------
+#Question-1
+
+```{r include=TRUE}
+data(gapminder)
+
+```
+#Question-2
+
+```{r include=TRUE}
+class(gapminder)
+
+```
+#Question-3
+```{r include=TRUE}
+dim(gapminder)
+
+```
+
+#Question-4
+```{r include=TRUE}
+names(gapminder)
+
+```
+
+#Question-5
+```{r include=TRUE}
+attributes(gapminder$life_expectancy)
+attributes(gapminder$fertility)
+```
+#Question-6
+```{r include=TRUE}
+#It wasn't included by creator of dataset
+```
+#Question-7
+```{r include=TRUE}
+View(gapminder)
+
+gapminder$population[gapminder$country == "Norway" & gapminder$year == 1962]
+```
+
+#Question-8
+
+```{r include=TRUE}
+unique(gapminder$country[gapminder$life_expectancy < 40])
+
+```
+```{r include=TRUE}
+gapminder$country[gapminder$life_expectancy < 40 & gapminder$year > 2000]
+
+```
+#Problem2
+#PartA
+#Question-1
+
+```{r include=TRUE}
+recent_grads <- read_csv("Newsweek_graduation_subset.csv")
+```
+
+#Question-2
+
+```{r include=TRUE}
+dim(recent_grads)
+```
+
+```{r include=TRUE}
+
+class(recent_grads)
+```
+
+```{r include=TRUE}
+names(recent_grads)
+
+colnames(recent_grads)
+```
+
+```{r include=TRUE}
+
+view(recent_grads)
+```
+#column attributes such as row and column names are included along with column specifications. there isnt any hidden attributes for columns because we imported a csv file.
+```{r include=TRUE}
+attributes(recent_grads)
+```
+#Part B
+#Question-1
+```{r include=TRUE}
+which.max(recent_grads$Median)
+recent_grads[1,]
+```
+```{r include=TRUE}
+which.min(recent_grads$Median)
+recent_grads[173,]
+```
+#Question-2
+##(a) Find major category with highest and lowest median income 
+
+```{r include=TRUE}
+mean(recent_grads$Median[recent_grads$Major_category == "Engineering"])
+```
+```{r include=TRUE}
+mean(recent_grads$Median[recent_grads$Major_category == "Education"])
+```
+
+
+##(b) Are there any professions with the top 10 highest median income and highest share of women? 
+
+```{r include=TRUE}
+top.income <- recent_grads[1:10,]
+```
+```{r include=TRUE}
+high.women.share<-recent_grads%>%
+  arrange(desc(ShareWomen))%>%
+  head(10)
+```
+# (c) Are women underrepresented in STEM fields still? 
+
+```{r include=TRUE}
+mean(recent_grads$ShareWomen, na.rm=TRUE)
+```
+```{r include=TRUE}
+stem<-subset(recent_grads[(recent_grads$Major_category=="Engineering")
+                          |(recent_grads$Major_category=="Physical Sciences")
+                          |(recent_grads$Major_category=="Biology & Life Science")
+                          |(recent_grads$Major_category=="Computers & Mathematics"),])
+```
+
+

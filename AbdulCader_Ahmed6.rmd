@@ -1,0 +1,138 @@
+---
+title: "AbdulCader_Mohammed_Shaheed"
+author: "Ahmed Adeeb AbdulCader Mohammed Shaheed"
+date: "2022-09-26"
+output:
+  html_document: default
+  word_document: default
+---
+
+
+```{r setup, include=FALSE}
+library(tidyverse) 
+library(babynames)
+library(htmlwidgets)
+knitr::opts_chunk$set(echo = TRUE)
+```
+## R Markdown
+
+#-------------------------------------------------
+# Topic 6 HW
+# Name: Ahmed Adeeb AbdulCader Mohammed Shaheed
+#-------------------------------------------------
+
+#-------------------------------------------------
+#Question-1
+
+```{r include=TRUE}
+names17 <- babynames %>%
+  filter(year %in% 2017) %>%
+  pull(name)
+head(names17)
+```
+#Question-1a
+```{r include=TRUE}
+vowel_counts <- c(sum(str_detect(names17, "^A")), sum(str_detect(names17, "^E")), sum(str_detect(names17, "^I")), sum(str_detect(names17, "^O")), sum(str_detect(names17, "^U")))
+
+names(vowel_counts) <- c("A", "E", "I", "O", "U")
+
+vowel_counts
+```
+#Most common is a
+
+#Question-1b
+```{r include=TRUE}
+mean(str_detect(names17, "^.{5,}"))*100
+mean(str_detect(names17, "^.{1,4}$"))*100
+```
+#more with more than 5 letters (89%)
+
+#Question-1c
+```{r include=TRUE}
+sum(str_detect(names17, "^.{14,}"))
+str_view(names17, ".{14,}", match = T)
+```
+#Question-1d
+```{r include=TRUE}
+sum(str_detect(names17, "[aeiouAEIOU]{4,}"))
+str_view(names17, "[aeiouAEIOU]{4,}", match=T)
+```
+#Question-1e
+```{r include=TRUE}
+str_view(names17, "[^aeiouAEIOU]{8,}", match=T)
+```
+
+#Question-2
+
+```{r include=TRUE}
+names17Z <- babynames %>%
+  filter(year %in% 2017, str_detect(name, "^Z")) %>%
+  arrange(desc(n)) %>%
+  pull(name, n)
+head(names17Z, 10)
+
+```
+```{r include=TRUE}
+names17Q <- babynames %>%
+  filter(year %in% 2017, str_detect(name, "^Q")) %>%
+  arrange(desc(n)) %>%
+  pull(name, n)
+head(names17Q, 10)
+
+```
+
+#Question-3
+
+```{r include=TRUE}
+vowels <- str_count(names17, "[aeiouAEIOU]")
+max_vowels <- max(vowels)
+max_vowels
+names17[vowels == max_vowels]
+```
+```{r include=TRUE}
+sum(str_count(names17, "[aeiouAEIOU]$"))
+```
+#Question-4
+
+```{r include=TRUE}
+babynames %>%
+  filter(name == "Mary", sex == "F") %>%
+  ggplot(aes(x = year, y = n)) +
+  labs(title = "Use of Mary as Baby Girl Name, 1880-2017") +
+  xlab("Year") + ylab("Number of Marys") +
+  geom_line()
+```
+
+#Question-4a
+
+```{r include=TRUE}
+topnames17 <- babynames %>%
+  filter(year %in% 2017) %>%
+  arrange(desc(n)) %>%
+  pull(name, n)
+head(topnames17, 10)
+```
+
+```{r include=TRUE}
+babynames %>%
+  filter(name == "Emma", sex == "F") %>%
+  ggplot(aes(x = year, y = n)) +
+  labs(title = "Emma as Baby Name, 1880-2017") +
+  xlab("Year") + ylab("No. of Emmas") +
+  geom_line()
+```
+
+#Question-5
+
+```{r include=TRUE}
+
+babynames %>%
+  filter(name == "Peyton") %>%
+  ggplot(aes(x = year, y = n, col = sex)) +
+  labs(title = "Use of Peyton by Gender, 1880-2017") +
+  xlab("Year") + ylab("Number of Peytons") +
+  geom_line()
+```
+
+
+

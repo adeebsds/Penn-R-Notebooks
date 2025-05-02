@@ -1,0 +1,71 @@
+---
+title: "DATA 310 - Ahmed AbdulCader 5"
+author: "Ahmed Adeeb AbdulCader Mohammed Shaheed"
+date: "2023-02-14"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(ggplot2)
+library(dplyr)
+library(broom)
+library(ggpubr)
+```
+
+## R Markdown
+
+#-------------------------------------------------
+# Homework 5
+# Name: Ahmed Adeeb AbdulCader Mohammed Shaheed
+#-------------------------------------------------
+
+#-------------------------------------------------
+
+#Question-1
+#1a
+```{r include=TRUE}
+
+load('ACSCountyData.Rdata')
+model = lm(median.income ~ percent.college, data = acs)
+summary(model)
+```
+#1b.
+
+If you move along the x axis of percent.college by 1 percent, the median income would move by 1015.14$
+
+
+#1c.
+
+The null hypothesis for this problem is: 'There is no relationship between the percentage of people who graduated college in a county and the median income for the people residing in that county. The alternative hypothesis is that there is a significant relationship between the two variables. It would appear that there is in fact a significant correlation between the two.
+
+
+#2a
+```{r include=TRUE}
+
+model2 = lm(percent.walk.commute ~ census.region, data = acs)
+summary(model2)
+```
+
+
+#2b 
+
+The coefficients show the difference in the likelihood of the percentage of walkers for each region compared to the mean percentage. The intercept refers to the lowest average of walking commuters of the regions.
+
+
+
+#2c
+
+y = 0.5072x1 -1.5012x2 +2.9867x3 +3.3944
+
+
+#2d 
+
+3.96
+
+
+#2e
+null hypothesis - there is no correlation between the region of the commuters and whether or not they walk as a commuter to work
+alternative hypothesis - there is a correlation between the region of the commuters and whether or not they walk as a commuter to work
+#2f 
+reject null hypothesis
+accept alternative hypothesis

@@ -1,0 +1,341 @@
+---
+title: "DATA 310"
+author: "Ahmed Adeeb AbdulCader Mohammed Shaheed"
+date: "2023-01-18"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(ggplot2)
+library(scales)
+library(tigerstats)
+
+
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+#-------------------------------------------------
+# Homework 2
+# Name: Ahmed Adeeb AbdulCader Mohammed Shaheed
+#-------------------------------------------------
+
+#-------------------------------------------------
+
+#Question-1
+
+You may determine the possibility of receiving a certain value for a variable, or a range of values, using a probability distribution. It may be used to calculate the likelihood of achieving a specific result. You might predict your likelihood of rolling two sixes in advance, for instance, if you're rolling two dice.
+
+
+
+#Question-2
+
+#a
+
+```{r include=TRUE}
+(pnorm(30, mean = 26, sd = sqrt(54)) - pnorm(24, mean = 26, sd = sqrt(54))) * 100
+
+pnormGC(c(24, 30), region = "between", mean = 26, sd = sqrt(54), graph = TRUE)
+
+```
+
+#b
+```{r include=TRUE}
+((100 - 95) / 2 + 95) / 100
+
+```
+```{r include=TRUE}
+qnorm(0.975, 26, sqrt(54))
+
+```
+```{r include=TRUE}
+qnorm((1-0.975), 26, sqrt(54))
+
+```
+```{r include=TRUE}
+pnormGC(c(11.59726, 40.40274), region = "between", mean = 26, sd = sqrt(54), graph = TRUE)
+
+```
+#Question-3
+
+#a
+
+```{r include=TRUE}
+(pnorm(50, mean = 43, sd = sqrt(23)) - pnorm(40, mean = 43, sd = sqrt(23))) * 100
+
+```
+
+```{r include=TRUE}
+pnormGC(c(40, 50), region = "between", mean = 43, sd = sqrt(23), graph = TRUE)
+
+```
+
+#b
+```{r include=TRUE}
+((100 - 99) / 2 + 99) / 100
+
+```
+```{r include=TRUE}
+qnorm(0.995, mean = 43, sd = sqrt(23))
+
+```
+
+```{r include=TRUE}
+qnorm((1-0.995), mean = 43, sd = sqrt(23))
+
+
+```
+
+```{r include=TRUE}
+pnormGC(c(30.64676, 55.35324), region = "between", mean = 43, sd = sqrt(23), graph = TRUE)
+
+```
+#Question-4
+
+#a
+```{r include=TRUE}
+
+numdice = 4
+
+numsims = 1000000
+
+maxnumber <- matrix(NA, nrow = numsims, ncol = 1)  
+
+set.seed(12221979)
+
+for (s in 1:numsims) {
+  
+  uniform <- runif(n = numdice, min = 0, max = 1)
+
+  dice <- matrix(-9, nrow = numdice, ncol = 1)  
+  dice[uniform >= 0 & uniform <= (1/6)] <- 1
+  dice[uniform > (1/6) & uniform <= (2/6)] <- 2
+  dice[uniform > (2/6) & uniform <= (3/6)] <- 3
+  dice[uniform > (3/6) & uniform <= (4/6)] <- 4
+  dice[uniform > (4/6) & uniform <= (5/6)] <- 5
+  dice[uniform > (5/6) & uniform <= (6/6)] <- 6
+  
+  uniqv <- unique(dice)
+  maxnum <- uniqv[which.max(tabulate(match(dice, uniqv)))]
+  
+  maxnumber[s] <- sum(dice == maxnum)
+}
+
+maxnumberdf <- as.data.frame(maxnumber)
+p <- ggplot(data=maxnumberdf, aes(x=V1)) +         
+  geom_bar( color="black") + 
+  scale_x_discrete(limits=c(1:numdice)) + 
+  labs(title="1,000,000 sims.of 4 dice",  
+       x="Max. of Same Number", 
+       y = "Number of Realizations")
+
+p + scale_y_continuous(labels = comma)
+```
+
+
+```{r include=TRUE}
+table(maxnumberdf)
+```
+
+```{r include=TRUE}
+mean(maxnumberdf == 1) * 100
+
+```
+
+#b
+
+```{r include=TRUE}
+
+numdice = 6
+
+numsims = 1000000
+
+maxnumber <- matrix(NA, nrow = numsims, ncol = 1)  
+
+set.seed(12221979)
+
+for (s in 1:numsims) {
+  
+  uniform <- runif(n = numdice, min = 0, max = 1)
+
+  dice <- matrix(-9, nrow = numdice, ncol = 1)  
+
+  
+  dice[uniform >= 0 & uniform <= (1/6)] <- 1
+  dice[uniform > (1/6) & uniform <= (2/6)] <- 2
+  dice[uniform > (2/6) & uniform <= (3/6)] <- 3
+  dice[uniform > (3/6) & uniform <= (4/6)] <- 4
+  dice[uniform > (4/6) & uniform <= (5/6)] <- 5
+  dice[uniform > (5/6) & uniform <= (6/6)] <- 6
+  
+
+  uniqv <- unique(dice)
+  maxnum <- uniqv[which.max(tabulate(match(dice, uniqv)))]
+  
+
+  maxnumber[s] <- sum(dice == maxnum)
+}
+
+
+maxnumberdf <- as.data.frame(maxnumber)
+p <- ggplot(data=maxnumberdf, aes(x=V1)) +         
+  geom_bar( color="black") + 
+  scale_x_discrete(limits=c(1:numdice)) + 
+  labs(title="1,000,000 sims.of 6 dice",  
+       x="Max. of Same Number", 
+       y = "Number of Realizations")
+
+p + scale_y_continuous(labels = comma)
+```
+
+```{r include=TRUE}
+table(maxnumberdf)
+
+```
+
+```{r include=TRUE}
+mean(maxnumberdf >= 3) * 100
+
+```
+
+#c
+```{r include=TRUE}
+
+numdice = 5
+
+numsims = 1000000
+
+maxnumber <- matrix(NA, nrow = numsims, ncol = 1)  
+
+sumdice <- matrix(NA, nrow = numsims, ncol = 1) 
+
+set.seed(12221979)
+
+for (s in 1:numsims) {
+  
+
+  uniform <- runif(n = numdice, min = 0, max = 1)
+
+  dice <- matrix(-9, nrow = numdice, ncol = 1)  
+
+  dice[uniform >= 0 & uniform <= (1/6)] <- 1
+  dice[uniform > (1/6) & uniform <= (2/6)] <- 2
+  dice[uniform > (2/6) & uniform <= (3/6)] <- 3
+  dice[uniform > (3/6) & uniform <= (4/6)] <- 4
+  dice[uniform > (4/6) & uniform <= (5/6)] <- 5
+  dice[uniform > (5/6) & uniform <= (6/6)] <- 6
+  
+
+  uniqv <- unique(dice)
+  maxnum <- uniqv[which.max(tabulate(match(dice, uniqv)))]
+  
+  maxnumber[s] <- sum(dice == maxnum)
+  
+  sumdice[s] <- sum(dice)
+}
+
+maxnumberdf <- as.data.frame(maxnumber)
+p <- ggplot(data=maxnumberdf, aes(x=V1)) +         
+  geom_bar( color="black") + 
+  scale_x_discrete(limits=c(1:numdice)) + 
+  labs(title="1,000,000 sims.of 5 dice",  
+       x="Max. of Same Number", 
+       y = "Number of Realizations")
+
+p + scale_y_continuous(labels = comma)
+```
+
+
+```{r include=TRUE}
+table(maxnumber)
+```
+```{r include=TRUE}
+
+table(sumdice)
+
+```
+
+```{r include=TRUE}
+100 * mean(maxnumber == 1 & (sumdice == 15 | sumdice == 20))
+
+```
+
+#Question 5
+#a
+
+THTHTHHTTTHTHTHTHHTTHTHT
+
+#b
+```{r include=TRUE}
+
+set.seed(12221979)
+
+
+numcoins = 25
+
+numsims = 100000
+
+probheads = 0.5
+
+
+longstreak <- matrix(NA, nrow = numsims, ncol = 1) 
+
+
+for (s in 1:numsims) {
+  
+   
+  
+  coins <- rbinom(numcoins, size = 1, prob = probheads)
+  
+  streak <- matrix(NA, nrow = numcoins, ncol = 1) 
+
+  streak[1] <- 1
+
+  for (c in 2:numcoins) {
+
+    streak[c] <- 1 + streak[c-1]*(coins[c] == coins[c-1])
+
+  }
+  
+  
+  longstreak[s] <- max(streak)
+
+}
+
+
+pdf <- table(longstreak) / numsims
+
+cdf <- pdf
+for (c in 2:dim(cdf)) {
+  cdf[c] <- cdf[c-1] + pdf[c]
+}
+
+
+cdfdf <- as.data.frame(cdf)
+
+p <- ggplot(data=cdfdf, aes(x=longstreak, y=Freq, group=1)) +
+  geom_line()+
+  geom_point()+
+  labs(title = "CDF in 100,000 Sims.", x = "Length of Streak of Same Coin", 
+       y = "Pr(Longest Streak <= Length)")
+p
+
+```
+
+#c
+```{r include=TRUE}
+head(cdfdf)
+```
+
+```{r include=TRUE}
+(1 - cdfdf$Freq[cdfdf$longstreak == 5]) * 100
+
+```
+
+#d
+```{r include=TRUE}
+(1 - cdfdf$Freq[cdfdf$longstreak == 3]) * 100
+
+```
+l

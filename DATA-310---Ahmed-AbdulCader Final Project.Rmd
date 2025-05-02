@@ -1,0 +1,422 @@
+---
+title: "DATA 310 Final Project"
+author: "Ahmed Adeeb AbdulCader Mohammed Shaheed"
+date: "2023-03-06"
+output: pdf_document
+---
+
+
+```{r setup, include=FALSE}
+rm(list=ls())
+
+#Packages
+library(survey)
+library(stargazer)
+library(sandwich)
+library(ggplot2)
+
+
+load("ANES20Datafor310.Rdata")
+
+#State
+anes$state <- anes$V203001
+
+#Biden Feeling Thermometer
+
+anes$biden.ft <- anes$V201151
+  
+anes$biden.ft[anes$biden.ft %in% c(-9,-4,998)] <- NA
+summary(anes$biden.ft)
+
+#Ideology
+anes$ideo7 <- anes$V201200
+anes$ideo7[anes$ideo7 %in% c(-9,-8,99)] <- NA
+table(anes$ideo7)
+
+anes$liberal<- NA
+anes$liberal[anes$ideo7 %in% c(1,2,3)] <- 1
+anes$liberal[!(anes$ideo7 %in% c(1,2,3))] <- 0
+
+anes$moderate<- NA
+anes$moderate[anes$ideo7 %in% c(4)] <- 1
+anes$moderate[!(anes$ideo7 %in% c(4))] <- 0
+
+anes$conservative<- NA
+anes$conservative[anes$ideo7 %in% c(5,6,7)] <- 1
+anes$conservative[!(anes$ideo7 %in% c(5,6,7))] <- 0
+
+
+#Religiosity
+anes$V201433
+#(Reverse coded)
+anes$religiosity <- NA
+anes$religiosity[anes$V201433==5] <- 1
+anes$religiosity[anes$V201433==4] <- 2
+anes$religiosity[anes$V201433==3] <- 3
+anes$religiosity[anes$V201433==2] <- 4
+anes$religiosity[anes$V201433==1] <- 5
+table(anes$religiosity)
+
+anes$high.religion <- NA
+anes$high.religion[anes$religiosity>=4] <- 1
+anes$high.religion[anes$religiosity<4] <- 0
+
+#Party ID dummies
+table(anes$V201231x)
+anes$V201231x[anes$V201231x %in% c(-9,-8)] <- NA
+
+anes$rep <- NA
+anes$rep[anes$V201231x %in% c(5,6,7)] <- 1
+anes$rep[!(anes$V201231x %in% c(5,6,7))] <- 0
+
+anes$ind <- NA
+anes$ind[anes$V201231x %in% c(4)] <- 1
+anes$ind[!(anes$V201231x %in% c(4))] <- 0
+
+anes$dem <- NA
+anes$dem[anes$V201231x %in% c(1,2,3)] <- 1
+anes$dem[!(anes$V201231x %in% c(1,2,3))] <- 0
+
+
+
+#Gender
+anes$V201600
+anes$female <- NA
+anes$female[anes$V201600==2] <- 1
+anes$female[anes$V201600==1] <- 0
+
+#Age
+anes$age <- anes$V201507x
+anes$age[anes$age==-9] <- NA
+anes$genz <- NA
+anes$genz[anes$age<=24] <- 1
+anes$genz[!(anes$age<=24)] <- 0
+
+anes$millenial<- NA
+anes$millenial[anes$age>24 & anes$age<=39] <- 1
+anes$millenial[!(anes$age>24 & anes$age<=39)] <- 0
+
+anes$genx<- NA
+anes$genx[anes$age>39 & anes$age<=55] <- 1
+anes$genx[!(anes$age>39 & anes$age<=55)] <- 0
+
+anes$babyboomer<- NA
+anes$babyboomer[anes$age>55] <- 1
+anes$babyboomer[!(anes$age>55)] <- 0
+
+#College
+anes$V201510
+anes$college[anes$V201510<6] <- 0
+anes$college[anes$V201510>6] <- 1
+anes$college[anes$V201510 %in% c(-9,-8,95)] <- NA
+table(anes$college)
+
+#Race
+anes$V201549x
+anes$V201549x[anes$V201549x %in% c(-9,-8)] <- NA
+anes$white[anes$V201549x==1] <- 1
+anes$white[!(anes$V201549x==1)] <- 0
+anes$black[anes$V201549x==2] <- 1
+anes$black[!(anes$V201549x==2)] <- 0
+
+#Weight
+anes$weight<- anes$V200010a
+
+
+
+#Restrict to variables we care about
+anes <- anes[,63:79]
+
+
+#Create weight object
+anes.w <- svydesign(ids = ~1,
+                    data=anes,
+                    weights = anes$weight)
+```
+# Introduction and Theory
+
+
+Conventionally, Americans tend to be of the belief that the older someone is, the likelier that they are to vote Republican, suggesting a correlation between the two. Will this wisdom ring true in the 2020 election? 
+Donald Trump shares views that are considered both socially and economically conservative, and a rhetoric that pushes a return to the ‘glory days’ of America, which can be considered favorable to older voters. The fiscally conservative policies may also support older citizens who may wish to have increased spending prowess. Joe Biden, however, is staunchly focused on improving the welfare of Americans all around, including improved state sponsored healthcare support. This could also draw in older voters and in the midst of the Trump administration’s poor job on COVID,  could be a spanner in the works. 
+While I believe that older generations are likelier to vote for Biden this time around than last time, I still believe they’re more likely to vote for Trump than younger voters are. In this report, I shall investigate if this is the case, with the expectation that older voters are likely to have a lower rating of Biden than younger voters are.
+
+
+# Main Variables
+
+
+I utilize the American National Election Study, academic research of the American adult population with a sample size of roughly 8000 people, to analyze this link.
+The "Feeling Thermometer" for Joe Biden is the major outcome variable we’re interested in. This question enquires respondents' feelings toward Biden, where 0 represents "cold" and 100 means "hot". 
+The respondents are told that 50 is considered ‘neither too warm nor too chilly’. With a mean of 49.2, Biden seems to be viewed with mixed feelings. However, the standard deviation provided of 34.5 means that he can instead be highly polarizing, with a wide range of views in between as well.
+This is reflected in the distribution of the variable, which is shown below.
+
+
+```{r, echo=F}
+#Visualization of key variables
+plot(density(anes$biden.ft,na.rm=T), 
+     xlim=c(0,100),
+     xlab="Feeling Thermometer: Percentage Scale",
+     main="Biden Feeling Thermometer")
+```
+
+Now the question we attempt to solve in this report is how age and the ideology of the average American affect how they feel towards him. 
+The respondents were given an opportunity to record their age at any value that they choose. The respondents’ age was recorded with respondents who chose not to respond being omitted from the data while respondents over the age of 80 being recorded as being 80.
+Ideology is established by respondents' self-placement on a 7-point scale from "Extremely liberal" to "Extremely conservative" with 4 being "Moderate". The predominant response to this question is "Moderate," and the average is nearly identical at 4.09.
+
+
+```{r, echo=F}
+
+barplot(prop.table(table(anes$age)),
+        xlab="Age of Respondent", 
+        ylab="Proportion",
+        axes=F,
+        main="Distribution of Respondents by Age")
+axis(side=2, las=2)
+```
+
+```{r, echo=F}
+barplot(prop.table(table(anes$ideo7)),
+        xlab="How conservatively they lean on a scale of 1 to 7", 
+        ylab="Proportion of Respondents",
+        axes=F,
+        main="Ideology")
+axis(side=2, las=2)
+
+```
+
+
+
+
+
+
+# Difference in Means
+
+
+```{r, echo=F}
+t1 <- svyttest(biden.ft ~ babyboomer, anes.w)
+#Among conservatives
+anes.w.r <- svydesign(ids = ~1,
+                      data=anes[anes$conservative==1,],
+                      weights = anes$weight[anes$conservative==1])
+tr <- svyttest(biden.ft ~ babyboomer, anes.w.r)
+
+#Among liberals
+anes.w.l <- svydesign(ids = ~1,
+                      data=anes[anes$liberal==1,],
+                      weights = anes$weight[anes$liberal==1])
+
+tl <- svyttest(biden.ft ~ babyboomer, anes.w.l)
+
+```
+
+
+The main relationship of interest is between age and feelings towards Biden. In this section of the report, we shall be discussing the effect of age on voting patterns using commonly distributed sectors of population by age.
+
+
+```{r, echo=F, fig.show="hold",out.width="32%"}
+#Visualize Main
+plot(density(anes$biden.ft[anes$genz==0], na.rm=T),
+     lwd=2, col="forestgreen", ylim=c(0,0.04), xlim=c(0,100),
+     main="Pooled")
+points(density(anes$biden.ft[anes$genz==1],na.=T), 
+       lwd=2, col="purple", type="l")
+abline(v=mean(anes$biden.ft[anes$genz==0], na.rm=T), lty=2, col="forestgreen")
+abline(v=mean(anes$biden.ft[anes$genz==1], na.rm=T), lty=2, col="purple")
+legend("topright", c("Not Gen Z", "Gen Z"), lty=c(1,1), lwd=c(2,2), 
+       col=c("forestgreen", "purple"))
+
+#Visualize conservative
+plot(density(anes$biden.ft[anes$genz==0 & anes$conservative==1], na.rm=T),
+     lwd=2, col="forestgreen", ylim=c(0,0.04), xlim=c(0,100),
+     main="Conservatives")
+points(density(anes$biden.ft[anes$genz==1 & anes$conservative==1],na.=T), 
+       lwd=2, col="purple", type="l")
+abline(v=mean(anes$biden.ft[anes$genz==0 & anes$conservative==1], na.rm=T), lty=2, col="forestgreen")
+abline(v=mean(anes$biden.ft[anes$genz==1 & anes$conservative==1], na.rm=T), lty=2, col="purple")
+legend("topright", c("Not Gen Z", "Gen Z"), lty=c(1,1), lwd=c(2,2), 
+       col=c("forestgreen", "purple"),)
+
+#Visualize liberal
+plot(density(anes$biden.ft[anes$genz==0 & anes$liberal==1], na.rm=T),
+     lwd=2, col="forestgreen", ylim=c(0,0.04), xlim=c(0,100),
+     main="Liberals")
+points(density(anes$biden.ft[anes$genz==1 & anes$liberal==1],na.=T), 
+       lwd=2, col="purple", type="l")
+abline(v=mean(anes$biden.ft[anes$genz==0 & anes$liberal==1], na.rm=T), lty=2, col="forestgreen")
+abline(v=mean(anes$biden.ft[anes$genz==1 & anes$liberal==1], na.rm=T), lty=2, col="purple")
+legend("topright", c("Not Gen Z", "Gen Z"), lty=c(1,1), lwd=c(2,2), 
+       col=c("forestgreen", "purple"), bg="white")
+
+
+
+#Visualize Main
+plot(density(anes$biden.ft[anes$millenial==0], na.rm=T),
+     lwd=2, col="forestgreen", ylim=c(0,0.04), xlim=c(0,100),
+     main="Pooled")
+points(density(anes$biden.ft[anes$millenial==1],na.=T), 
+       lwd=2, col="purple", type="l")
+abline(v=mean(anes$biden.ft[anes$millenial==0], na.rm=T), lty=2, col="forestgreen")
+abline(v=mean(anes$biden.ft[anes$millenial==1], na.rm=T), lty=2, col="purple")
+legend("topright", c("Not Millenial", "Millenial"), lty=c(1,1), lwd=c(2,2), 
+       col=c("forestgreen", "purple"))
+
+#Visualize conservative
+plot(density(anes$biden.ft[anes$millenial==0 & anes$conservative==1], na.rm=T),
+     lwd=2, col="forestgreen", ylim=c(0,0.04), xlim=c(0,100),
+     main="Conservatives")
+points(density(anes$biden.ft[anes$millenial==1 & anes$conservative==1],na.=T), 
+       lwd=2, col="purple", type="l")
+abline(v=mean(anes$biden.ft[anes$millenial==0 & anes$conservative==1], na.rm=T), lty=2, col="forestgreen")
+abline(v=mean(anes$biden.ft[anes$millenial==1 & anes$conservative==1], na.rm=T), lty=2, col="purple")
+legend("topright", c("Not Millenial", "Millenial"), lty=c(1,1), lwd=c(2,2), 
+       col=c("forestgreen", "purple"),)
+
+#Visualize liberal
+plot(density(anes$biden.ft[anes$millenial==0 & anes$liberal==1], na.rm=T),
+     lwd=2, col="forestgreen", ylim=c(0,0.04), xlim=c(0,100),
+     main="Liberals")
+points(density(anes$biden.ft[anes$millenial==1 & anes$liberal==1],na.=T), 
+       lwd=2, col="purple", type="l")
+abline(v=mean(anes$biden.ft[anes$millenial==0 & anes$liberal==1], na.rm=T), lty=2, col="forestgreen")
+abline(v=mean(anes$biden.ft[anes$millenial==1 & anes$liberal==1], na.rm=T), lty=2, col="purple")
+legend("topright", c("Not Millenial", "Millenial"), lty=c(1,1), lwd=c(2,2), 
+       col=c("forestgreen", "purple"), bg="white")
+
+#Visualize Main
+plot(density(anes$biden.ft[anes$genx==0], na.rm=T),
+     lwd=2, col="forestgreen", ylim=c(0,0.04), xlim=c(0,100),
+     main="Pooled")
+points(density(anes$biden.ft[anes$genx==1],na.=T), 
+       lwd=2, col="purple", type="l")
+abline(v=mean(anes$biden.ft[anes$genx==0], na.rm=T), lty=2, col="forestgreen")
+abline(v=mean(anes$biden.ft[anes$genx==1], na.rm=T), lty=2, col="purple")
+legend("topright", c("Not Gen X", "Gen X"), lty=c(1,1), lwd=c(2,2), 
+       col=c("forestgreen", "purple"))
+
+#Visualize conservative
+plot(density(anes$biden.ft[anes$genx==0 & anes$conservative==1], na.rm=T),
+     lwd=2, col="forestgreen", ylim=c(0,0.04), xlim=c(0,100),
+     main="Conservatives")
+points(density(anes$biden.ft[anes$genx==1 & anes$conservative==1],na.=T), 
+       lwd=2, col="purple", type="l")
+abline(v=mean(anes$biden.ft[anes$genx==0 & anes$conservative==1], na.rm=T), lty=2, col="forestgreen")
+abline(v=mean(anes$biden.ft[anes$genx==1 & anes$conservative==1], na.rm=T), lty=2, col="purple")
+legend("topright", c("Not Gen X", "Gen X"), lty=c(1,1), lwd=c(2,2), 
+       col=c("forestgreen", "purple"),)
+
+#Visualize liberal
+plot(density(anes$biden.ft[anes$genx==0 & anes$liberal==1], na.rm=T),
+     lwd=2, col="forestgreen", ylim=c(0,0.04), xlim=c(0,100),
+     main="Liberals")
+points(density(anes$biden.ft[anes$genx==1 & anes$liberal==1],na.=T), 
+       lwd=2, col="purple", type="l")
+abline(v=mean(anes$biden.ft[anes$genx==0 & anes$liberal==1], na.rm=T), lty=2, col="forestgreen")
+abline(v=mean(anes$biden.ft[anes$genx==1 & anes$liberal==1], na.rm=T), lty=2, col="purple")
+legend("topright", c("Not Gen X", "Gen X"), lty=c(1,1), lwd=c(2,2), 
+       col=c("forestgreen", "purple"), bg="white")
+
+#Visualize Main
+plot(density(anes$biden.ft[anes$babyboomer==0], na.rm=T),
+     lwd=2, col="forestgreen", ylim=c(0,0.04), xlim=c(0,100),
+     main="Pooled")
+points(density(anes$biden.ft[anes$babyboomer==1],na.=T), 
+       lwd=2, col="purple", type="l")
+abline(v=mean(anes$biden.ft[anes$babyboomer==0], na.rm=T), lty=2, col="forestgreen")
+abline(v=mean(anes$biden.ft[anes$babyboomer==1], na.rm=T), lty=2, col="purple")
+legend("topright", c("Not Baby Boomer", "Baby Boomer"), lty=c(1,1), lwd=c(2,2), 
+       col=c("forestgreen", "purple"))
+
+#Visualize conservative
+plot(density(anes$biden.ft[anes$babyboomer==0 & anes$conservative==1], na.rm=T),
+     lwd=2, col="forestgreen", ylim=c(0,0.04), xlim=c(0,100),
+     main="Conservatives")
+points(density(anes$biden.ft[anes$babyboomer==1 & anes$conservative==1],na.=T), 
+       lwd=2, col="purple", type="l")
+abline(v=mean(anes$biden.ft[anes$babyboomer==0 & anes$conservative==1], na.rm=T), lty=2, col="forestgreen")
+abline(v=mean(anes$biden.ft[anes$babyboomer==1 & anes$conservative==1], na.rm=T), lty=2, col="purple")
+legend("topright", c("Not Baby Boomer", "Baby Boomer"), lty=c(1,1), lwd=c(2,2), 
+       col=c("forestgreen", "purple"),)
+
+#Visualize liberal
+plot(density(anes$biden.ft[anes$babyboomer==0 & anes$liberal==1], na.rm=T),
+     lwd=2, col="forestgreen", ylim=c(0,0.04), xlim=c(0,100),
+     main="Liberals")
+points(density(anes$biden.ft[anes$babyboomer==1 & anes$liberal==1],na.=T), 
+       lwd=2, col="purple", type="l")
+abline(v=mean(anes$biden.ft[anes$babyboomer==0 & anes$liberal==1], na.rm=T), lty=2, col="forestgreen")
+abline(v=mean(anes$biden.ft[anes$babyboomer==1 & anes$liberal==1], na.rm=T), lty=2, col="purple")
+legend("topright", c("Not Baby Boomer", "Baby Boomer"), lty=c(1,1), lwd=c(2,2), 
+       col=c("forestgreen", "purple"), bg="white")
+
+
+```
+The visualizations tell us a tale by themselves. The most interesting of which is that, for the most part, Gen-Xers have a relatively even split on their feelings for Biden and also do not impact the average feeling rating for Biden, as their pooled visualization shows us that they vote along the same lines on average as the other three groups combined. This means that Gen-Xers are likely to have the largest variance of opinions. We also see that Gen-Xers are likelier to feel more affinity to Biden than the younger generations but are relatively as likely to dislike him as the younger generations.
+
+Moving up the age group, we see that Baby Boomers are the most polarized with their views on Biden, being by far the likeliest to intensely dislike Biden but also by far the likeliest to love Biden. 
+Before we analyze that trend, let’s check the younger generation. Millennials and Gen-Zers seem to have a moderate feeling rating for Biden with fewer conservatives intensely disliking him, and fewer liberals feeling an intense affinity to him.
+
+This brings us to a very interesting idea. Biden is likeliest to be loved most by the oldest generation, but loved least by the youngest, despite conventional wisdom suggesting otherwise, not to mention the electoral results. 
+This may have something to do with the alternative candidate presented to the electorate. While most youngsters weren’t thrilled with Biden, they preferred him to the much more abrasive Trump. Older generations, however, were likelier to love Biden, but not necessarily likelier to vote for him over Trump, because while the number of people who loved Biden is far higher in older generations than younger ones, the number of people who liked Biden enough to vote for him over Trump must have been higher in the younger generations.
+
+
+```{r, echo=F}
+m1 <- lm(biden.ft ~  age, data=anes, weights= anes$weight)
+m1.vcov <- vcovCL(m1, cluster=anes$state)
+m1.se <- sqrt(diag(m1.vcov))
+
+m2 <- lm(biden.ft ~ ideo7 , data=anes, weights= anes$weight)
+m2.vcov <- vcovCL(m2, cluster=anes$state)
+m2.se <- sqrt(diag(m2.vcov))
+
+m3 <- lm(biden.ft ~ age + ideo7 , data=anes, weights= anes$weight)
+m3.vcov <- vcovCL(m3, cluster=anes$state)
+m3.se <- sqrt(diag(m3.vcov))
+```
+
+# Regression Analysis
+In this analysis, we run a regression with both age and ideology as continuous variables. We try to understand what we learned in the difference in means portion of the analysis.
+```{r, echo=F, results = "asis", out.width="100%"}
+stargazer(m1, m2,m3,
+          se=list(m1.se,m2.se,m3.se),
+          dep.var.labels = "Biden Feeling Thermometer",
+          covariate.labels = c("Age","Ideology"),
+          title = "Direct Effects",
+          digits=2,
+          float=T,
+          single.row = T,
+          column.sep.width = "1pt",
+          font.size = "small",
+          header = F,
+          style="ajps",
+          omit.stat = c("rsq","f", "ser"),
+          star.cutoffs = c(.05)
+)
+```
+
+Model 1 from Table 1 shows us that the effect of age is very minute but positive at 0.11 as it moves from one year to the next, meaning that between 18 and 80, a shift of 7.9 points is likely to occur in favor of Biden. Meanwhile, ideology has a very pronounced effect on the feeling thermometer, as Model 2 shows us that at a -13.48 shift for each category, how a person feels about Biden can shift nearly 81 points negatively as they move from the most liberal to the most conservative.
+```{r, echo=F}
+m4 <- lm(biden.ft ~ age*ideo7 , data=anes, weights= anes$weight)
+m5 <- lm(biden.ft ~ age*ideo7 + rep + dem + female + religiosity, data=anes, weights= anes$weight)
+```
+
+```{r, echo=F, results="hide"}
+ideo.levels <- seq(1,7)
+
+effect <- coef(m4)["religiosity"] + coef(m4)["religiosity:ideo7"]*ideo.levels
+effect
+```
+
+\begin{table}[]
+\caption{Marginal Effect of Age, by Ideology}
+\begin{tabular}{l|ccccccc}
+\textbf{Ideology}              & Very Liberal & 2    & 3    & Moderate    & 5     & 6     & Very Conservative \\
+\hline
+\textbf{Effect of Age} & 0.62         & 0.50 & 0.39 & 0.27 & 0.16 & 0.05 & -0.07            
+\end{tabular}
+\end{table}
+
+Now Table 2 gives us an insight into how likely age is to affect the feeling rating towards Biden for every ideological category. What we see, is quite interesting. For the most liberal, the effect of age on the feeling thermometer towards Biden is highest, lowering as it goes towards the conservative side. Yet, the effect of age on the most conservative is still only a very minimal -0.07, which doesn’t suggest much of a loss in support for Biden as the voting groups age. This suggests that there is a very steady group of conservative voters across all age groups whose choices aren’t necessarily swayed by their age.
+
+
+# Conclusion
+
+This leads me to conclude that the feeling thermometer fails to accurately provide enough insight for us to conclusively conclude that our hypothesis is null and void. But it also fails to provide enough insight for us to conclude that it is acceptable. Instead what we can do is state a new hypothesis to be accepted, which is that older people are likelier to have more polarized views on Biden, but are less likely to vote for him over Trump. They’re likely to love Biden and consider him an exceptional candidate, which younger generations aren’t likely to do but are instead more likely to vote favorably towards him, feeling that he’s an adequate candidate.

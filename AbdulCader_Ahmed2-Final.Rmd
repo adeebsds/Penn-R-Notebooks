@@ -1,0 +1,150 @@
+---
+title: "FINAL"
+author: "Ahmed Adeeb AbdulCader Mohammed Shaheed"
+date: "2022-12-20"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+setwd("C:/Users/Adeeb/Documents/Final Exam")
+library(tidyverse)
+library(dplyr)
+```
+
+## R Markdown
+
+#PART A
+
+#Question1a
+```{r include=TRUE}
+
+popAL<-read.csv("sub-est2016_1.csv",head=T)
+popAK<-read.csv("sub-est2016_2.csv",head=T)
+popCombined <- merge(popAL,popAK,by=c('NAME','STNAME'),all.x=T)
+```
+```{r include=TRUE}
+
+popUS<-read.csv("sub-est2016_all.csv",head=T)
+
+unique(popUS$STNAME)
+```
+```{r include=TRUE}
+
+popUSstates = subset(popUS, NAME == STNAME,select=c('NAME','STNAME','POPESTIMATE2012'))
+```
+```{r include=TRUE}
+popUSstates2 = subset(popUSstates, STNAME == NAME,select=c('NAME','STNAME','POPESTIMATE2012'))
+```
+```{r include=TRUE}
+areaUS <- read.csv('https://raw.githubusercontent.com/jakevdp/PythonDataScienceHandbook/master/notebooks/data/state-areas.csv')
+
+popArea <- left_join(popUSstates, areaUS, by=c('STNAME'='state'))
+```
+```{r include=TRUE}
+
+popArea$popdensity <- (popArea$POPESTIMATE2012/popArea$area..sq..mi.)
+```
+```{r include=TRUE}
+
+ecnUS <-read.csv("ECN_2012_US_52A1.csv",head=T)
+ecnUS <- ecnUS[-1,]
+```
+```{r include=TRUE}
+
+ecnUS$RCPTOT <- as.numeric(RCPTOT)
+
+rev <-ecnUS%>%
+  group_by(GEO.display.label,NAICS.display.label)%>%
+  summarise(RCPTOT=sum(RCPTOT))
+```
+```{r include=TRUE}
+  
+rev <- na.omit(rev)
+
+popRev <- left_join(popArea, rev, by=c('STNAME'='GEO.display.label'))
+
+popRev2 <- popRev%>%
+  group_by(STNAME,popdensity)%>%
+  summarise(RCPTOT=sum(RCPTOT))
+```
+```{r include=TRUE}
+
+ggplot(data = df11, mapping = (aes(x = `popdensity`, y = `RCPTOT`)))+
+  geom_point()+
+  geom_smooth(method = lm, se = FALSE)
+```
+```{r include=TRUE}
+
+load("~/Desktop/Class/Data 210/nes.rda")
+
+table(nes$interest_voted2008)
+```{r include=TRUE}
+
+nes$interest_voted2008[nes$interest_voted2008 == 1] <- "Voted"
+nes$interest_voted2008[nes$interest_voted2008 == 2] <- "Didn't Vote"
+nes$interest_voted2008[nes$interest_voted2008 == -8] <- "Don't Know"
+nes$interest_voted2008[nes$interest_voted2008 == -9] <- "NA"
+table(nes$interest_voted2008)
+```
+```{r include=TRUE}
+
+table(nes$interest_whovote2008)
+```
+```{r include=TRUE}
+
+nes$interest_whovote2008[nes$interest_whovote2008 == 1] <- "Barack Obama"
+nes$interest_whovote2008[nes$interest_whovote2008 == 2] <- "John McCain"
+nes$interest_whovote2008[nes$interest_whovote2008 == 5] <- "Other"
+nes$interest_whovote2008[nes$interest_whovote2008 == -8] <- "Don't Know"
+nes$interest_whovote2008[nes$interest_whovote2008 == -1 | 
+                           nes$interest_whovote2008 == -9] <- "NA"
+table(nes$interest_whovote2008)
+```
+```{r include=TRUE}
+
+with(nes[nes$interest_voted2008 == "Voted",],
+     wpct(interest_whovote2008, weight_full)) * 100
+```
+```{r include=TRUE}
+
+table(nes$ftgr_fedgov)
+```
+```{r include=TRUE}
+
+
+nes <- nes %>% filter(ftgr_fedgov >= 0 & ftgr_fedgov <= 100)
+
+table(nes$ftgr_fedgov)
+```
+```{r include=TRUE}
+
+
+weighted.mean(nes$ftgr_fedgov, w = nes$weight_full)
+```
+```{r include=TRUE}
+
+
+table(nes$prevote_regpty)
+```
+```{r include=TRUE}
+
+nes$prevote_regpty[nes$prevote_regpty == 1] <- "Democrat"
+nes$prevote_regpty[nes$prevote_regpty == 2] <- "Republican"
+nes$prevote_regpty[nes$prevote_regpty == 4 | 
+                     nes$prevote_regpty == 5 | 
+                     nes$prevote_regpty == -1 | 
+                     nes$prevote_regpty == -8 | 
+                     nes$prevote_regpty == -9] <- "NA"
+table(nes$prevote_regpty)
+```
+```{r include=TRUE}
+
+
+dems <- nes %>% filter(prevote_regpty == "Democrat")
+
+reps <- nes %>% filter(prevote_regpty == "Republican")
+
+weighted.mean(dems$ftgr_fedgov, w = dems$weight_full) -
+weighted.mean(reps$ftgr_fedgov, w = reps$weight_full)
+```

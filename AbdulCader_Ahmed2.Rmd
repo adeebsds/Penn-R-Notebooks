@@ -1,0 +1,88 @@
+---
+title: "Homework 2"
+author: "Ahmed Adeeb AbdulCader Mohammed Shaheed"
+date: "2022-09-13"
+output: html_document
+---
+
+# Question 1
+<!-- not_cancelled ensures that we are able to avoid the n/a values in our dep_delay and arr_delay variables. This is because the values that occur as n/a win those variables tend to be because the flight is cancelled. It allows us to avoid using the na.rm = TRUE portion of our code and simplifies our code significantly.
+--> 
+delays <- flights %>%
+  group_by(dest) %>%
+  summarize(
+    count = n(),
+    dist = mean (distance, na.rm = TRUE),
+    delay = mean (arr_delay, na.rm = TRUE)
+  ) %>%
+  filter(count>20, dest!="HNL")
+  
+not_cancelled <- flights %>%
+  filter(!is.na(dep_delay), !is.na(arr_delay))
+
+delays <- not_cancelled %>%
+  group_by(dest) %>%
+  summarize(
+    count = n(),
+    dist = mean(distance),
+    delay = mean(arr_delay)
+  ) %>%
+  filter(count>20, dest!="HNL")
+
+#----------------------------------------------
+# Question 2
+
+avg_delay_cancel <- flights %>%
+  group_by(month, day) %>%
+  mutate(.,cancelled = ifelse((is.na(dep_delay) & is.na(arr_delay)), 1, 0)) %>%
+  summarize(
+    avg_delay = mean(arr_delay[arr_delay >0], na.rm = TRUE),
+    avg_cancelled = 100 * mean(cancelled))
+
+avg_delay_cancel
+
+ggplot(data = avg_delay_cancel, mapping = aes(x= avg_delay, y= avg_cancelled)) +
+  geom_point() +
+  geom_smooth()
+<!-- We can see a clear positive relationship between the two after about a 30 minute delay. This could be because smaller delays in flight times are very common and don't serve as an indicator of cancellation. Meanwhile, longer delays tend to tie into a cause and are therefore likelier to cause cancellations.
+-->
+#----------------------------------------------
+# Question 3
+
+not_cancelled %>%
+  group_by(hour) %>%
+  summarize(delay = mean(dep_delay > 0)) %>%
+  arrange(asc(delay))
+
+not_cancelled %>%
+  group_by(hour) %>%
+  summarize(delay = mean(dep_delay <= 0)) %>%
+  arrange(desc(delay))
+<!-- Our data shows that 6 (AM) has the least likely of a delay at 0.213 or 21.3% of flights and 0.787 or 78.7% likely to be on time or early
+-->
+#----------------------------------------------
+# Question 4
+
+delay30 <- not_cancelled %>%
+  group_by(carrier) %>%
+  mutate(.,over30 = ifelse((dep_delay >= 30), 1, 0)) %>%
+  summarize(
+    avg_over30 = 100 * mean(over30)) %>%
+  arrange(desc(avg_over30))
+
+delay30
+<!-- EV, YV and F9 are the worst performing airlines in this department with 0.23,0.213 and 0.194, or 23%, 21.3% and 19.4% respectively
+-->
+#----------------------------------------------
+# Question 5
+
+least_delay_dest1 <- not_cancelled %>%
+  group_by(dest) %>%
+  summarize(
+    arrival_delay = mean(arr_delay[arr_delay >0])) %>%
+  arrange(arrival_delay)
+
+least_delay_dest1
+<!-- Palm Springs Airport with 6 minutes
+-->
+

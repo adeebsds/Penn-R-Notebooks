@@ -1,0 +1,72 @@
+---
+title: "Adeeb 4010-1"
+author: "Ahmed Adeeb AbdulCader Mohammed Shaheed"
+date: "2023-02-19"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(leaflet)
+library(rgdal)
+```
+
+```{r, echo=F}
+## R Markdown
+
+#in this piece of code we read files using functions we called from the rgdal library and assign them to our choice of variables. The layer portion reads the file name without the shp extension.
+placedata <- read.csv("place_data.csv")
+zcode <- readOGR("Zipcodes_Poly", layer = "Zipcodes_Poly", encoding = "UTF-8")
+
+#next we merge our dataframe from our earlier import and shape file so we can create a map function to work with
+zcode@data <- data.frame(zcode@data, placedata[match(zcode@data$CODE, placedata$CODE),])
+
+#next we add a new variable which allows us to develop a form of ascending order in terms of risk that we can color code and include in our map 
+zcode@data$rank[zcode@data$Risk <= 24] <- 1
+zcode@data$rank[24 < zcode@data$Risk & zcode@data$Risk <= 49] <- 2
+zcode@data$rank[49 < zcode@data$Risk & zcode@data$Risk <= 74] <- 3
+zcode@data$rank[74 < zcode@data$Risk] <- 4
+zcode@data$rank[is.na(zcode@data$Risk)] <- 0
+```
+```{r, echo=F}
+
+# afterwards we design popup object which will when hovered over/pressed on the map, will show a pop up describing the various factors we use to describe the risk factor in philadelphia.
+popup <- paste("<strong>Zip Code </strong>", 
+               zcode@data$CODE, "<br>",
+               "<br>",
+               "<strong>Risk Index: </strong>", 
+               zcode@data$Risk,"%","<br>",
+               "<strong>Poverty: </strong>", 
+               zcode@data$Poverty,"%","<br>",
+               "<strong>Education: </strong>", 
+               zcode@data$Education,"%","<br>",
+               "<strong>Unemployment: </strong>", 
+               zcode@data$Unemployment,"%","<br>",
+               "<strong>Crime: </strong>", 
+               zcode@data$Crime,"%","<br>",
+               "<strong>ACEs: </strong>", 
+               zcode@data$ACEs,"%","<br>")
+
+# In this piece of code we assign to a variable the factor of the color code, in ascending order to match the ranking system we establish in the previous sections
+riskColor <- colorFactor(c("#FFFFFF", 
+                           "#FFDF00",
+                           "#F4A460",
+                           "#E75480",
+                           "#A70D2A"),
+                         zcode@data$rank)
+
+# In this piece of code we complete the drawing of the map, we use the leaflet package to process the map data using CartoDB's platform and then follow it up by adding the required visual aspects to our map. fillColor is vital in this piece of code as it assigns the map the colors as we coded for it in the previous sections, with fillOpacity at 0.7 allowing us some leeway to read any location names under the drawn map.
+leaflet(zcode) %>% 
+  addProviderTiles("CartoDB.Positron") %>%
+  addPolygons(stroke = TRUE,
+              color="#FFFFFF",
+              smoothFactor = 0.2, 
+              fillOpacity = .7,
+              fillColor = ~riskColor(rank),
+              weight = 1, 
+              popup = popup) %>%
+  addLegend("bottomright", 
+            colors = c("#FFFFFF", "#FFDF00","#F4A460","#E75480","#A70D2A"),
+            labels = c("No data", "0-24","25-49","50-74","75-98"),  
+            title = "Risk: Lowest to Highest",
+            opacity = 1)  
+```

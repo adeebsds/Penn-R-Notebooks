@@ -1,0 +1,106 @@
+---
+title: "HW WEEK 7"
+author: "Ahmed Adeeb AbdulCader Mohammed Shaheed"
+date: "2022-12-20"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+## R Markdown
+
+#Question 1a
+
+#Felony voting patterns would be hard to decipher as we aren't able to create a set of random study participants with varying levels of felony convictions. It is also highly improbable that anyone asked what they would do if they were/weren't a felon could objectively answer the question without any bias. 
+
+#Instead, the best option we have to make sense of this data is to build a study with participants who have very similar backgrounds and only differ in their status of being felons or not, and then build a study to compare their behavior and check for any correlations.
+
+#Question 1b
+
+#The authors are interested in studying the causal effect of an encouragement to register and to vote on released felons.
+
+#Two treatment groups and one control group.Each member of the two groups was sent a treatment letter in addition to their official mail-in ballot. The treatment letters were similar except the second group's treatment letter provides reassurance that they wouldn't be asked about their prior status as a felon.
+
+#The authors used block randomization, with blocks for individual crime types.
+
+
+#Question 1c
+
+```{r include=TRUE}
+
+load("~/felons.RData")
+head(felons)
+```
+```{r include=TRUE}
+
+table(felons$returntoprison)
+```
+```{r include=TRUE}
+
+felons <- felons[!felons$returntoprison == 1,]
+
+felons$treatment_collapsed <- FALSE
+felons$treatment_collapsed[felons$treatment == 2 | felons$treatment == 3] <- TRUE
+
+table(felons$treatment_collapsed)
+```
+#Question 1d
+
+```{r include=TRUE}
+
+age.test <- t.test(felons$age ~ felons$treatment_collapsed)
+
+time.served.test <- t.test(felons$days_served ~ felons$treatment_collapsed)
+
+years.released.test <- t.test(felons$yrs_since_release ~ felons$treatment_collapsed)
+
+vote08.test <- t.test(felons$vote08 ~ felons$treatment_collapsed)
+
+t.tests <- data.frame(Variable = character(0),
+                      Estimate = numeric(0),
+                      P.Value = numeric(0))
+
+t.tests <- rbind(t.tests, c("Age", age.test$estimate, age.test$p.value))
+t.tests <- rbind(t.tests, c("Time Served", time.served.test$estimate, 
+                            time.served.test$p.value))
+t.tests <- rbind(t.tests, c("Years Released", years.released.test$estimate, 
+                            years.released.test$p.value))
+t.tests <- rbind(t.tests, c("Vote 08", vote08.test$estimate, vote08.test$p.value))
+
+colnames(t.tests) <- c("Variable", "Control Estimate", "Treated Estimate", "P.Value")
+
+
+t.tests
+```
+```{r include=TRUE}
+
+summary(lm(treatment_collapsed ~ felony_type, data = felons))
+```
+```{r include=TRUE}
+
+summary(lm(treatment_collapsed ~ age + days_served + yrs_since_release + 
+             vote08 + felony_type, data = felons))
+```
+
+#Question 1e
+
+#The likelihood that members of the untreated group would register to vote was approximately.058 or 5.8%, but the likelihood that members of the treated group would do so was approximately.017 higher, at.075 or 7.5%.
+#The likelihood of the untreated group voting was approximately.029 or 2.9%, whereas the likelihood of the treated group voting was approximately.009 greater than that, at .038 or 3.8%.
+```{r include=TRUE}
+
+summary(lm(registered ~ treatment_collapsed, data = felons))
+```
+```{r include=TRUE}
+
+summary(lm(vote12 ~ treatment_collapsed, data = felons))
+```
+```{r include=TRUE}
+
+summary(lm(registered ~ treatment_collapsed + age + days_served + 
+             yrs_since_release + vote08 + felony_type, data = felons))
+
+summary(lm(vote12 ~ treatment_collapsed + age + days_served + 
+             yrs_since_release + vote08 + felony_type, data = felons))
+```

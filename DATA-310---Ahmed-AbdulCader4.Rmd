@@ -1,0 +1,77 @@
+---
+title: "DATA 310 Ahmed AbdulCader4"
+author: "Ahmed Adeeb AbdulCader Mohammed Shaheed"
+date: "2023-03-05"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(ggplot2)
+```
+
+
+#Question 1
+
+a
+```{r include=TRUE}
+
+load("AZPollFake2021.Rdata")
+```
+
+b
+```{r include=TRUE}
+
+
+azt <- sd(az$clinton.thermometer)/sqrt(nrow(az))
+
+
+qt(c(0.025,.975), df=446)
+
+#i
+c(mean(az$clinton.thermometer)- azt*qt(.975, df=446),
+  mean(az$clinton.thermometer)+ azt*qt(.975, df=446))
+
+#ii
+
+
+azt2 <- sd(az$clinton.thermometer[az$clinton==1])/sqrt(nrow(az[az$clinton==1,]))
+
+c(mean(az$clinton.thermometer[az$clinton==1])- azt2*qt(.975, df=258),
+  mean(az$clinton.thermometer[az$clinton==1])+ azt2*qt(.975, df=258))
+
+
+#iii
+
+azt3 <- sd(az$clinton.thermometer[az$clinton==0])/sqrt(nrow(az[az$clinton==0,]))
+
+c(mean(az$clinton.thermometer[az$clinton==0])- azt3*qt(.975, df=187),
+  mean(az$clinton.thermometer[az$clinton==0])+ azt3*qt(.975, df=187))
+```
+
+
+c
+
+```{r include=TRUE}
+
+ttest <- t.test(clinton.thermometer ~ clinton, az)
+print(ttest)
+```
+
+
+d
+```{r include=TRUE}
+
+estim <- lm(clinton.thermometer ~ clinton, data=az)
+summary(estim)
+
+weightedestim <- lm(clinton.thermometer ~ clinton, data=az, weights = az$final_weight)
+summary(estim)
+
+summary(weightedestim)
+```
+
+e
+```{r include=TRUE}
+
+summary(lm(clinton.thermometer ~ yseduc, data=az))
+```

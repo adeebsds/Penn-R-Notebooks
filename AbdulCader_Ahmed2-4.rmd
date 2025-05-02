@@ -1,0 +1,170 @@
+---
+title: "2-4"
+author: "Ahmed Adeeb AbdulCader Mohammed Shaheed"
+date: "2022-12-15"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(readxl)
+```
+
+## R Markdown
+
+#Question 1
+```{r include=TRUE}
+
+education_long <- read_csv("education_long.csv")
+head(education_long)
+```
+#Question 2
+
+```{r include=TRUE}
+
+education_wide <- spread(education_long,
+                 key = "Year",
+                 value = "College_Completion_Rate")
+
+head(education_wide)
+```
+
+```{r include=TRUE}
+
+nrow(education_wide) == length(unique(education_wide$Name))
+```
+#Question 3
+
+```{r include=TRUE}
+
+poverty <- read_excel("PovertyReport.xlsx", 
+    sheet = "Sheet2")
+
+head(poverty)
+```
+```{r include=TRUE}
+
+nrow(poverty) == length(unique(poverty$Name))
+```
+#Question 4
+
+```{r include=TRUE}
+
+education17 <- education_wide %>% 
+  select("Name", "2013-2017_Rural", "2013-2017_Urban", "2013-2017_Total")
+
+education17$`2013-2017_Rural`<- education17$`2013-2017_Rural`*100
+education17$`2013-2017_Urban`<- education17$`2013-2017_Urban`*100
+education17$`2013-2017_Total`<- education17$`2013-2017_Total`*100
+
+head(education17)
+```
+#Question 5
+
+```{r include=TRUE}
+education17[!education17$Name %in% poverty$Name,]
+```
+```{r include=TRUE}
+
+poverty[!poverty$Name %in% education17$Name,]
+```
+```{r include=TRUE}
+
+poverty$Name <- recode(poverty$Name, 
+                       "National" = "United States")
+
+poved <- merge(x = education17,
+               y = poverty,
+               by = "Name",
+               all = F) 
+
+poved <- rename(poved,
+         Rural = "2013-2017_Rural",
+         Urban = "2013-2017_Urban",
+         Total = "2013-2017_Total",
+         Poverty = "Percent",
+         Poverty_0to17 = "Percent_0to17") 
+
+head(poved)
+```
+#Question 6
+
+```{r include=TRUE}
+
+poved <- gather(poved, key = "Type", value = "College Completion Rate", 2:4) 
+
+poved %>%
+  ggplot(aes(x = `College Completion Rate`, y = Poverty, col = Type)) +
+  geom_point() +
+  geom_smooth(method = lm, se = FALSE)
+```
+#PART 2
+#Question 1
+
+```{r include=TRUE}
+
+demographics <- read_csv("2006_-_2012_School_Demographics_and_Accountability_Snapshot.csv")
+head(demographics)
+```
+```{r include=TRUE}
+
+sat <- read_csv("SAT__College_Board__2010_School_Level_Results.csv")
+head(sat)
+```
+#Question 2
+
+
+```{r include=TRUE}
+
+demographics10 <- subset(demographics, demographics$schoolyear == 20092010)
+head(demographics10)
+```
+#Question 3
+
+```{r include=TRUE}
+
+View(demographics10)
+View(sat)
+```
+#Question 4
+
+```{r include=TRUE}
+
+demographics10 <- demographics10 %>%
+  filter(!is.na(demographics10$grade9 & demographics10$grade10 & 
+                  demographics10$grade11 & demographics10$grade12))
+```
+#Question 5
+
+```{r include=TRUE}
+
+tests <- merge(x = sat,
+               y = demographics10,
+               by = "DBN",
+               all = F)
+
+View(tests)
+```
+```{r include=TRUE}
+
+tests <- gather(tests, key = "Race", value = "Percent Student Body", c(33, 35, 37, 39))
+
+table(tests$Race)
+```
+#Question 6
+
+```{r include=TRUE}
+
+tests$Race <- recode(tests$Race, 
+                     "asian_per" = "Asian", 
+                     "black_per" = "Black",
+                     "hispanic_per" = "Hispanic", 
+                     "white_per" = "White")
+
+tests %>%
+  ggplot(aes(x = `Percent Student Body`, y = `Critical Reading Mean`)) +
+  geom_point() +
+  facet_wrap( ~ Race) + 
+  geom_smooth(method = lm, se = FALSE)
+```

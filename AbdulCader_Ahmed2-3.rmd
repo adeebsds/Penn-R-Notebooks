@@ -1,0 +1,232 @@
+---
+title: "AbdulCader_Mohammed_Shaheed"
+author: "Ahmed Adeeb AbdulCader Mohammed Shaheed"
+date: "2022-09-26"
+output:
+  word_document: default
+  html_document: default
+  pdf_document: default
+---
+
+
+```{r setup, include=FALSE}
+library(tidyverse) 
+library(dslabs)
+knitr::opts_chunk$set(echo = TRUE)
+```
+## R Markdown
+
+#-------------------------------------------------
+# Week 3 HW
+# Name: Ahmed Adeeb AbdulCader Mohammed Shaheed
+#-------------------------------------------------
+
+#-------------------------------------------------
+#Question-1a
+
+```{r include=TRUE}
+recent_grads <- read_csv("recent-grads.csv")
+dim
+```
+
+```{r include=TRUE}
+head(recent_grads)
+
+```
+#Question-1b
+
+```{r include=TRUE}
+length(unique(recent_grads$Major_category))
+```
+
+```{r include=TRUE}
+sort(table(recent_grads$Major_category), decreasing = T)[1]
+```
+
+#Question-1c
+```{r include=TRUE}
+sum(recent_grads$Women, na.rm = TRUE)
+```
+
+```{r include=TRUE}
+(sum(recent_grads$Women, na.rm = TRUE)) / (sum(recent_grads$Total, na.rm = TRUE))
+```
+
+#Question-1d
+```{r include=TRUE}
+recent_grads$Major[which.max(recent_grads$ShareWomen)]
+
+```
+```{r include=TRUE}
+recent_grads$ShareWomen[recent_grads$Major == "EARLY CHILDHOOD EDUCATION"]
+
+```
+```{r include=TRUE}
+recent_grads$Major[which.min(recent_grads$ShareWomen)]
+
+```
+```{r include=TRUE}
+recent_grads$ShareWomen[recent_grads$Major == "MILITARY TECHNOLOGIES"]
+
+```
+
+#Question-1e
+```{r include=TRUE}
+sum(recent_grads$Total[recent_grads$Major_category == "Health"])
+```
+```{r include=TRUE}
+(sum(recent_grads$Full_time_year_round[recent_grads$Major_category == "Health"])) /
+  (sum(recent_grads$Total[recent_grads$Major_category == "Health"]))
+```
+#Question-1f
+```{r include=TRUE}
+recent_grads$Income_spread <- recent_grads$P75th - recent_grads$P25th
+
+low_unemp <- recent_grads %>% 
+  filter(Unemployment_rate < 0.06) 
+  
+low_unemp$Major[which.max(low_unemp$Income_spread)]
+```
+#Question-2a
+```{r include=TRUE}
+load("exit-poll-2016.RData")
+exit.untouched <- exit
+
+exit[1,] == exit[2,]
+```
+
+```{r include=TRUE}
+attributes(exit$favorable.rating)
+
+```
+
+```{r include=TRUE}
+exit <- spread(exit,
+                 key = favorable.cand,
+                 value = favorable.rating)
+
+nrow(exit) == length(unique(exit$id))
+
+```
+```{r include=TRUE}
+exit$clinton[exit$clinton == 1] <- "favorable"
+exit$clinton[exit$clinton == 2] <- "unfavorable"
+
+exit$trump[exit$trump == 1] <- "favorable"
+exit$trump[exit$trump == 2] <- "unfavorable"
+
+head(exit)
+
+
+```
+#Question-2b
+
+```{r include=TRUE}
+exit <- gather(exit, "educ", "educ.indicator", 7:10)
+exit <- exit[!(exit$educ.indicator == 0),]
+exit <- exit[!duplicated(exit$id),]
+exit$educ[exit$educ.indicator == 99] <- NA
+
+exit$educ[exit$educ == "educ.hs"] <- "hs"
+exit$educ[exit$educ == "educ.somecoll"] <- "some college"
+exit$educ[exit$educ == "educ.bach"] <- "bachelors"
+exit$educ[exit$educ ==  "educ.postgrad"] <- "postgrad"
+
+table(exit$educ)
+
+```
+```{r include=TRUE}
+exit$educ.indicator <- NULL
+
+head(exit)
+
+```
+#Question-2c
+
+```{r include=TRUE}
+exit <- separate(exit,
+                   col = "sex.age.race",
+                   into = c("sex", "age", "race"),
+                   sep = " ")
+
+unique(exit$sex)
+```
+
+```{r include=TRUE}
+exit$sex[exit$sex == "unknown"] <- NA
+
+unique(exit$age)
+```
+
+```{r include=TRUE}
+exit$age[exit$age== "-999"] <- NA
+
+unique(exit$race)
+```
+
+```{r include=TRUE}
+exit$race[exit$race== "NA"] <- NA
+exit$race <- tolower(exit$race)
+
+head(exit)
+```
+#Question-2d
+
+```{r include=TRUE}
+attributes(exit.untouched$PRSPA16)
+```
+```{r include=TRUE}
+unique(exit$PRSPA16)
+```
+```{r include=TRUE}
+exit$third.party <- 
+  
+exit$third.party[exit$PRSPA16 == "1" | exit$PRSPA16 == "2" ] <- 0
+exit$third.party[exit$PRSPA16 == "3" | exit$PRSPA16 == "4" | exit$PRSPA16 == "9"] <- 1 
+exit$third.party[exit$PRSPA16 == "0" | exit$PRSPA16 == "NA" ] <- NA
+table(exit$third.party)
+```
+```{r include=TRUE}
+exit$PRSPA16 <- NULL
+```
+#Question-2e
+```{r include=TRUE}
+attributes(exit.untouched$married)
+```
+```{r include=TRUE}
+exit$married[exit$married == 2] <- 0
+table(exit$married)
+```
+
+#Question-2e
+
+```{r include=TRUE}
+exit$PHIL3 <- tolower(factor(exit$PHIL3,
+                     labels = names(attr(exit.untouched$PHIL3,"labels"))))
+
+exit$partyid <- tolower(factor(exit$partyid,
+                       labels = names(attr(exit.untouched$partyid,"labels"))))
+
+head(exit)
+```
+
+#Question 2g
+```{r include=TRUE}
+attributes(exit.untouched$PHIL3)
+```
+```{r include=TRUE}
+attributes(exit.untouched$partyid)
+
+```
+```{r include=TRUE}
+exit <- rename(exit,
+                 voter.id = id,
+                 pol.id = PHIL3,
+                 party.id = partyid)
+
+exit <- select(exit, voter.id, pol.id, party.id, clinton, trump, third.party, 
+               sex, age, race, educ, married)
+
+head(exit)
+```
+
